@@ -10,8 +10,8 @@ class Spreadsheet {
       targetEl = document.querySelector(selectors);
     }
     this.data = new DataProxy('sheet1', options);
-    const rootEl = h('div', 'spreadsheet').on('contextmenu', evt =>
-      evt.preventDefault(),
+    const rootEl = h('div', 'spreadsheet').on('contextmenu', event =>
+      event.preventDefault(),
     );
     // create canvas element
     targetEl.appendChild(rootEl.el);
@@ -32,8 +32,8 @@ class Spreadsheet {
   //   return validations.errors.size <= 0;
   // }
 
-  change(cb) {
-    this.data.change = cb;
+  change(callback) {
+    this.data.change = callback;
     return this;
   }
 

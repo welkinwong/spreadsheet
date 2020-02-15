@@ -28,26 +28,25 @@ class Cols {
     return this.width;
   }
 
-  getOrNew(ci) {
-    this._[ci] = this._[ci] || {};
-    return this._[ci];
+  getOrNew(colIndex) {
+    this._[colIndex] = this._[colIndex] || {};
+    return this._[colIndex];
   }
 
-  setWidth(ci, width) {
-    const col = this.getOrNew(ci);
+  setWidth(colIndex, width) {
+    const col = this.getOrNew(colIndex);
     col.width = width;
   }
 
-  setStyle(ci, style) {
-    const col = this.getOrNew(ci);
+  setStyle(colIndex, style) {
+    const col = this.getOrNew(colIndex);
     col.style = style;
   }
 
   sumWidth(min, max) {
-    return _.reduce(
-      _.range(min, max + 1),
-      (sum, value) => sum + this.getWidth(value),
-    );
+    return _.reduce(_.range(min, max + 1), (sum, value) => {
+      return sum + this.getWidth(value - 1);
+    });
   }
 
   totalWidth() {

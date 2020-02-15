@@ -5,18 +5,18 @@ class Merges {
     this._ = d;
   }
 
-  forEach(cb) {
-    this._.forEach(cb);
+  forEach(callback) {
+    this._.forEach(callback);
   }
 
   deleteWithin(cr) {
     this._ = this._.filter(it => !it.within(cr));
   }
 
-  getFirstIncludes(ri, ci) {
+  getFirstIncludes(rowIndex, colIndex) {
     for (let i = 0; i < this._.length; i += 1) {
       const it = this._[i];
-      if (it.includes(ri, ci)) {
+      if (it.includes(rowIndex, colIndex)) {
         return it;
       }
     }
@@ -24,14 +24,18 @@ class Merges {
   }
 
   filterIntersects(cellRange) {
-    return new Merges(this._.filter(it => it.intersects(cellRange)));
+    return new Merges(
+      this._.filter(it => {
+        // console.log(4, it, it.intersects(cellRange));
+        return it.intersects(cellRange);
+      }),
+    );
   }
 
   intersects(cellRange) {
     for (let i = 0; i < this._.length; i += 1) {
       const it = this._[i];
       if (it.intersects(cellRange)) {
-        // console.log('intersects');
         return true;
       }
     }

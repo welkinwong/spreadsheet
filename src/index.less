@@ -1,0 +1,17 @@
+@import './component/scrollbar.less';
+@import './component/overlayer.less';
+
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+.spreadsheet-sheet {
+  position: relative;
+  overflow: hidden;
+}
+
+.spreadsheet-table {
+  // html5 bottom margin bug
+  vertical-align: bottom;
+}

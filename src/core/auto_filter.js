@@ -4,8 +4,8 @@ import { CellRange } from './cell_range';
 //   in => []
 //   be => [min, max]
 class Filter {
-  constructor(ci, operator, value) {
-    this.ci = ci;
+  constructor(colIndex, operator, value) {
+    this.colIndex = colIndex;
     this.operator = operator;
     this.value = value;
   }
@@ -35,14 +35,14 @@ class Filter {
   }
 
   getData() {
-    const { ci, operator, value } = this;
-    return { ci, operator, value };
+    const { colIndex, operator, value } = this;
+    return { colIndex, operator, value };
   }
 }
 
 class Sort {
-  constructor(ci, order) {
-    this.ci = ci;
+  constructor(colIndex, order) {
+    this.colIndex = colIndex;
     this.order = order;
   }
 
@@ -65,9 +65,11 @@ export default class AutoFilter {
   setData({ ref, filters, sort }) {
     if (ref != null) {
       this.ref = ref;
-      this.fitlers = filters.map(it => new Filter(it.ci, it.operator, it.value));
+      this.fitlers = filters.map(
+        it => new Filter(it.colIndex, it.operator, it.value),
+      );
       if (sort) {
-        this.sort = new Sort(sort.ci, sort.order);
+        this.sort = new Sort(sort.colIndex, sort.order);
       }
     }
   }
@@ -80,38 +82,38 @@ export default class AutoFilter {
     return {};
   }
 
-  addFilter(ci, operator, value) {
-    const filter = this.getFilter(ci);
+  addFilter(colIndex, operator, value) {
+    const filter = this.getFilter(colIndex);
     if (filter == null) {
-      this.filters.push(new Filter(ci, operator, value));
+      this.filters.push(new Filter(colIndex, operator, value));
     } else {
       filter.set(operator, value);
     }
   }
 
-  setSort(ci, order) {
-    this.sort = order ? new Sort(ci, order) : null;
+  setSort(colIndex, order) {
+    this.sort = order ? new Sort(colIndex, order) : null;
   }
 
-  includes(ri, ci) {
+  includes(rowIndex, colIndex) {
     if (this.active()) {
-      return this.hrange().includes(ri, ci);
+      return this.hrange().includes(rowIndex, colIndex);
     }
     return false;
   }
 
-  getSort(ci) {
+  getSort(colIndex) {
     const { sort } = this;
-    if (sort && sort.ci === ci) {
+    if (sort && sort.colIndex === colIndex) {
       return sort;
     }
     return null;
   }
 
-  getFilter(ci) {
+  getFilter(colIndex) {
     const { filters } = this;
     for (let i = 0; i < filters.length; i += 1) {
-      if (filters[i].ci === ci) {
+      if (filters[i].colIndex === colIndex) {
         return filters[i];
       }
     }
@@ -126,16 +128,16 @@ export default class AutoFilter {
     if (this.active()) {
       const { sri, eri } = this.range();
       const { filters } = this;
-      for (let ri = sri + 1; ri <= eri; ri += 1) {
+      for (let rowIndex = sri + 1; rowIndex <= eri; rowIndex += 1) {
         for (let i = 0; i < filters.length; i += 1) {
           const filter = filters[i];
-          const cell = getCell(ri, filter.ci);
+          const cell = getCell(rowIndex, filter.colIndex);
           const ctext = cell ? cell.text : '';
           if (!filter.includes(ctext)) {
-            rset.add(ri);
+            rset.add(rowIndex);
             break;
           } else {
-            fset.add(ri);
+            fset.add(rowIndex);
           }
         }
       }
@@ -143,12 +145,12 @@ export default class AutoFilter {
     return { rset, fset };
   }
 
-  items(ci, getCell) {
+  items(colIndex, getCell) {
     const m = {};
     if (this.active()) {
       const { sri, eri } = this.range();
-      for (let ri = sri + 1; ri <= eri; ri += 1) {
-        const cell = getCell(ri, ci);
+      for (let rowIndex = sri + 1; rowIndex <= eri; rowIndex += 1) {
+        const cell = getCell(rowIndex, colIndex);
         if (cell !== null && !/^\s*$/.test(cell.text)) {
           const key = cell.text;
           const cnt = (m[key] || 0) + 1;

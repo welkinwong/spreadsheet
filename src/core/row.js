@@ -8,21 +8,21 @@ class Rows {
     this.height = height;
   }
 
-  getHeight(ri) {
-    const row = this.get(ri);
+  getHeight(rowIndex) {
+    const row = this.get(rowIndex);
     if (row && row.height) {
       return row.height;
     }
     return this.height;
   }
 
-  setHeight(ri, v) {
-    const row = this.getOrNew(ri);
+  setHeight(rowIndex, v) {
+    const row = this.getOrNew(rowIndex);
     row.height = v;
   }
 
-  setStyle(ri, style) {
-    const row = this.getOrNew(ri);
+  setStyle(rowIndex, style) {
+    const row = this.getOrNew(rowIndex);
     row.style = style;
   }
 
@@ -38,61 +38,67 @@ class Rows {
     return this.sumHeight(0, this.len);
   }
 
-  get(ri) {
-    return this._[ri];
+  get(rowIndex) {
+    return this._[rowIndex];
   }
 
-  getOrNew(ri) {
-    this._[ri] = this._[ri] || { cells: {} };
-    return this._[ri];
+  getOrNew(rowIndex) {
+    this._[rowIndex] = this._[rowIndex] || { cells: {} };
+    return this._[rowIndex];
   }
 
-  getCell(ri, ci) {
-    const row = this.get(ri);
+  getCell(rowIndex, colIndex) {
+    const row = this.get(rowIndex);
     if (
       row !== undefined &&
       row.cells !== undefined &&
-      row.cells[ci] !== undefined
+      row.cells[colIndex] !== undefined
     ) {
-      return row.cells[ci];
+      return row.cells[colIndex];
     }
     return null;
   }
 
-  getCellMerge(ri, ci) {
-    const cell = this.getCell(ri, ci);
+  getCellMerge(rowIndex, colIndex) {
+    const cell = this.getCell(rowIndex, colIndex);
     if (cell && cell.merge) return cell.merge;
     return [0, 0];
   }
 
-  getCellOrNew(ri, ci) {
-    const row = this.getOrNew(ri);
-    row.cells[ci] = row.cells[ci] || {};
-    return row.cells[ci];
+  getCellOrNew(rowIndex, colIndex) {
+    const row = this.getOrNew(rowIndex);
+    row.cells[colIndex] = row.cells[colIndex] || {};
+    return row.cells[colIndex];
   }
 
   // what: all | text | format
-  setCell(ri, ci, cell, what = 'all') {
-    const row = this.getOrNew(ri);
+  setCell(rowIndex, colIndex, cell, what = 'all') {
+    const row = this.getOrNew(rowIndex);
     if (what === 'all') {
-      row.cells[ci] = cell;
+      row.cells[colIndex] = cell;
     } else if (what === 'text') {
-      row.cells[ci] = row.cells[ci] || {};
-      row.cells[ci].text = cell.text;
+      row.cells[colIndex] = row.cells[colIndex] || {};
+      row.cells[colIndex].text = cell.text;
     } else if (what === 'format') {
-      row.cells[ci] = row.cells[ci] || {};
-      row.cells[ci].style = cell.style;
-      if (cell.merge) row.cells[ci].merge = cell.merge;
+      row.cells[colIndex] = row.cells[colIndex] || {};
+      row.cells[colIndex].style = cell.style;
+      if (cell.merge) row.cells[colIndex].merge = cell.merge;
     }
   }
 
-  setCellText(ri, ci, text) {
-    const cell = this.getCellOrNew(ri, ci);
+  setCellText(rowIndex, colIndex, text) {
+    const cell = this.getCellOrNew(rowIndex, colIndex);
     cell.text = text;
   }
 
   // what: all | format | text
-  copyPaste(srcCellRange, dstCellRange, what, autofill = false, cb = () => {}) {
+  copyPaste(
+    srcCellRange,
+    dstCellRange,
+    what,
+    autofill = false,
+    callback = () => {},
+  ) {
     const { sri, sci, eri, eci } = srcCellRange;
     const dsri = dstCellRange.sri;
     const dsci = dstCellRange.sci;
@@ -148,7 +154,7 @@ class Rows {
                 }
                 // console.log('ncell:', nri, nci, ncell);
                 this.setCell(nri, nci, ncell, what);
-                cb(nri, nci, ncell);
+                callback(nri, nci, ncell);
               }
             }
           }
@@ -159,16 +165,16 @@ class Rows {
 
   cutPaste(srcCellRange, dstCellRange) {
     const ncellmm = {};
-    this.each(ri => {
-      this.eachCells(ri, ci => {
-        let nri = parseInt(ri, 10);
-        let nci = parseInt(ci, 10);
-        if (srcCellRange.includes(ri, ci)) {
+    this.each(rowIndex => {
+      this.eachCells(rowIndex, colIndex => {
+        let nri = parseInt(rowIndex, 10);
+        let nci = parseInt(colIndex, 10);
+        if (srcCellRange.includes(rowIndex, colIndex)) {
           nri = dstCellRange.sri + (nri - srcCellRange.sri);
           nci = dstCellRange.sci + (nci - srcCellRange.sci);
         }
         ncellmm[nri] = ncellmm[nri] || { cells: {} };
-        ncellmm[nri].cells[nci] = this._[ri].cells[ci];
+        ncellmm[nri].cells[nci] = this._[rowIndex].cells[colIndex];
       });
     });
     this._ = ncellmm;
@@ -179,18 +185,18 @@ class Rows {
     if (src.length <= 0) return 0;
     const { sri, sci } = dstCellRange;
     src.forEach((row, i) => {
-      const ri = sri + i;
+      const rowIndex = sri + i;
       row.forEach((cell, j) => {
-        const ci = sci + j;
-        this.setCellText(ri, ci, cell);
+        const colIndex = sci + j;
+        this.setCellText(rowIndex, colIndex, cell);
       });
     });
   }
 
   insert(sri, n = 1) {
     const ndata = {};
-    this.each((ri, row) => {
-      let nri = parseInt(ri, 10);
+    this.each((rowIndex, row) => {
+      let nri = parseInt(rowIndex, 10);
       if (nri >= sri) {
         nri += n;
       }
@@ -203,11 +209,11 @@ class Rows {
   delete(sri, eri) {
     const n = eri - sri + 1;
     const ndata = {};
-    this.each((ri, row) => {
-      const nri = parseInt(ri, 10);
+    this.each((rowIndex, row) => {
+      const nri = parseInt(rowIndex, 10);
       if (nri < sri) {
         ndata[nri] = row;
-      } else if (ri > eri) {
+      } else if (rowIndex > eri) {
         ndata[nri - n] = row;
       }
     });
@@ -216,10 +222,10 @@ class Rows {
   }
 
   insertColumn(sci, n = 1) {
-    this.each((ri, row) => {
+    this.each((rowIndex, row) => {
       const rndata = {};
-      this.eachCells(ri, (ci, cell) => {
-        let nci = parseInt(ci, 10);
+      this.eachCells(rowIndex, (colIndex, cell) => {
+        let nci = parseInt(colIndex, 10);
         if (nci >= sci) {
           nci += n;
         }
@@ -231,10 +237,10 @@ class Rows {
 
   deleteColumn(sci, eci) {
     const n = eci - sci + 1;
-    this.each((ri, row) => {
+    this.each((rowIndex, row) => {
       const rndata = {};
-      this.eachCells(ri, (ci, cell) => {
-        const nci = parseInt(ci, 10);
+      this.eachCells(rowIndex, (colIndex, cell) => {
+        const nci = parseInt(colIndex, 10);
         if (nci < sci) {
           rndata[nci] = cell;
         } else if (nci > eci) {
@@ -253,13 +259,13 @@ class Rows {
   }
 
   // what: all | text | format | merge
-  deleteCell(ri, ci, what = 'all') {
-    const row = this.get(ri);
+  deleteCell(rowIndex, colIndex, what = 'all') {
+    const row = this.get(rowIndex);
     if (row !== null) {
-      const cell = this.getCell(ri, ci);
+      const cell = this.getCell(rowIndex, colIndex);
       if (cell !== null) {
         if (what === 'all') {
-          delete row.cells[ci];
+          delete row.cells[colIndex];
         } else if (what === 'text') {
           if (cell.text) delete cell.text;
           if (cell.value) delete cell.value;
@@ -273,16 +279,16 @@ class Rows {
     }
   }
 
-  each(cb) {
-    Object.entries(this._).forEach(([ri, row]) => {
-      cb(ri, row);
+  each(callback) {
+    Object.entries(this._).forEach(([rowIndex, row]) => {
+      callback(rowIndex, row);
     });
   }
 
-  eachCells(ri, cb) {
-    if (this._[ri] && this._[ri].cells) {
-      Object.entries(this._[ri].cells).forEach(([ci, cell]) => {
-        cb(ci, cell);
+  eachCells(rowIndex, callback) {
+    if (this._[rowIndex] && this._[rowIndex].cells) {
+      Object.entries(this._[rowIndex].cells).forEach(([colIndex, cell]) => {
+        callback(colIndex, cell);
       });
     }
   }

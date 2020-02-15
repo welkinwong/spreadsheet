@@ -3,17 +3,17 @@ import { CellRange } from './cell_range';
 export default class Selector {
   constructor() {
     this.range = new CellRange(0, 0, 0, 0);
-    this.ri = 0;
-    this.ci = 0;
+    this.rowIndex = 0;
+    this.colIndex = 0;
   }
 
   multiple() {
     return this.range.multiple();
   }
 
-  setIndexes(ri, ci) {
-    this.ri = ri;
-    this.ci = ci;
+  setIndexes(rowIndex, colIndex) {
+    this.rowIndex = rowIndex;
+    this.colIndex = colIndex;
   }
 
   size() {

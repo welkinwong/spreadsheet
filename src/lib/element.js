@@ -28,18 +28,18 @@ class Element {
     ) {
       eventName = 'DOMMouseScroll';
     }
-    this.el.addEventListener(eventName, evt => {
-      handler(evt);
+    this.el.addEventListener(eventName, event => {
+      handler(event);
       for (let i = 0; i < oen.length; i += 1) {
         const k = oen[i];
-        if (k === 'left' && evt.button !== 0) {
+        if (k === 'left' && event.button !== 0) {
           return;
         }
-        if (k === 'right' && evt.button !== 2) {
+        if (k === 'right' && event.button !== 2) {
           return;
         }
         if (k === 'stop') {
-          evt.stopPropagation();
+          event.stopPropagation();
         }
       }
     });

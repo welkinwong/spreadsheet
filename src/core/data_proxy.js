@@ -96,6 +96,18 @@ const defaultSettings = {
   },
 };
 
+function rangeReduceIf(min, max, inits, initv, ifv, getv) {
+  let s = inits;
+  let v = initv;
+  let i = min;
+  for (; i < max; i += 1) {
+    if (s > ifv) break;
+    v = getv(i);
+    s += v;
+  }
+  return [i, s - v, v];
+}
+
 export default class DataProxy {
   constructor(name, settings = {}) {
     this.settings = _.merge(defaultSettings, settings);
@@ -123,17 +135,63 @@ export default class DataProxy {
     this.unsortedRowMap = new Map();
   }
 
-  // 获取视图高度
+  /**
+   * 根据传入滚动条滚动值设置开始单元格和滚动值
+   * @param {Number} x 横向滚动条滚动值
+   * @param {Number} callback 回调
+   */
+  scrollx(x, callback) {
+    const { scroll, freeze, cols } = this;
+    const [, fci] = freeze;
+
+    const [colIndex] = rangeReduceIf(fci, cols.len, 0, 0, x, index =>
+      cols.getWidth(index),
+    );
+
+    // 渲染函数使用 colIndex 值作为开始单元格，当前一个格子因为隐藏不可见时，赋值 CI
+    scroll.colIndex = x > 0 ? colIndex - 1 : 0;
+    scroll.x = x;
+    callback();
+  }
+
+  /**
+   * 根据传入滚动条滚动值设置开始单元格和滚动值
+   * @param {Number} y 纵向滚动条滚动值
+   * @param {Number} callback 回调
+   */
+  scrolly(y, callback) {
+    const { scroll, freeze, rows } = this;
+    const [fri] = freeze;
+    const [rowIndex] = rangeReduceIf(fri, rows.len, 0, 0, y, index =>
+      rows.getHeight(index),
+    );
+
+    // 渲染函数使用 rowIndex 值作为开始单元格，当前一个格子因为隐藏不可见时，赋值 CI
+    scroll.rowIndex = y > 0 ? rowIndex - 1 : 0;
+    scroll.y = y;
+    return callback();
+  }
+
+  /**
+   * 获取文档视图高度
+   * @return {Number} 返回设置中的高度
+   */
   viewHeight() {
     return this.settings.view.height();
   }
 
-  // 获取视图宽度
+  /**
+   * 获取文档视图宽度
+   * @return {Number} 返回设置中的宽度
+   */
   viewWidth() {
     return this.settings.view.width();
   }
 
-  // 设置数据
+  /**
+   * 设置表格数据
+   * @param {Object} data 表格数据
+   */
   setData(data) {
     _.forIn(data, (value, property) => {
       if (property === 'merges' || property === 'rows' || property === 'cols') {
@@ -149,11 +207,12 @@ export default class DataProxy {
     return this;
   }
 
-  eachMergesInView(viewRange, cb) {
-    this.merges.filterIntersects(viewRange).forEach(it => cb(it));
+  eachMergesInView(viewRange, callback) {
+    // console.log(444, this.merges.filterIntersects(viewRange));
+    this.merges.filterIntersects(viewRange).forEach(it => callback(it));
   }
 
-  rowEach(min, max, cb) {
+  rowEach(min, max, callback) {
     let y = 0;
     const { rows } = this;
     const frset = this.exceptRowSet;
@@ -170,19 +229,19 @@ export default class DataProxy {
         offset += 1;
       } else {
         const rowHeight = rows.getHeight(i);
-        cb(i, y, rowHeight);
+        callback(i, y, rowHeight);
         y += rowHeight;
         if (y > this.viewHeight()) break;
       }
     }
   }
 
-  colEach(min, max, cb) {
+  colEach(min, max, callback) {
     let x = 0;
     const { cols } = this;
     for (let i = min; i <= max; i += 1) {
       const colWidth = cols.getWidth(i);
-      cb(i, x, colWidth);
+      callback(i, x, colWidth);
       x += colWidth;
       if (x > this.viewWidth()) break;
     }
@@ -192,9 +251,9 @@ export default class DataProxy {
     const { exceptRowSet, rows } = this;
     const exceptRows = Array.from(exceptRowSet);
     let exceptRowTH = 0;
-    exceptRows.forEach(ri => {
-      if (ri < sri || ri > eri) {
-        const height = rows.getHeight(ri);
+    exceptRows.forEach(rowIndex => {
+      if (rowIndex < sri || rowIndex > eri) {
+        const height = rows.getHeight(rowIndex);
         exceptRowTH += height;
       }
     });
@@ -203,14 +262,14 @@ export default class DataProxy {
 
   viewRange() {
     const { scroll, rows, cols, freeze, exceptRowSet } = this;
-    let { ri, ci } = scroll;
-    if (ri <= 0) [ri] = freeze;
-    if (ci <= 0) [, ci] = freeze;
+    let { rowIndex, colIndex } = scroll;
+    if (rowIndex <= 0) [rowIndex] = freeze;
+    if (colIndex <= 0) [, colIndex] = freeze;
 
     let [x, y] = [0, 0];
     let [eri, eci] = [rows.len, cols.len];
 
-    for (let i = ri; i < rows.len; i += 1) {
+    for (let i = rowIndex; i < rows.len; i += 1) {
       if (!exceptRowSet.has(i)) {
         y += rows.getHeight(i);
         eri = i;
@@ -218,39 +277,40 @@ export default class DataProxy {
       if (y > this.viewHeight()) break;
     }
 
-    for (let j = ci; j < cols.len; j += 1) {
+    for (let j = colIndex; j < cols.len; j += 1) {
       x += cols.getWidth(j);
       eci = j;
       if (x > this.viewWidth()) break;
     }
 
-    return new CellRange(ri, ci, eri, eci, x, y);
+    return new CellRange(rowIndex, colIndex, eri, eci, x, y);
   }
 
-  cellRect(ri, ci) {
+  cellRect(rowIndex, colIndex) {
     const { rows, cols } = this;
-    const left = cols.sumWidth(0, ci);
-    const top = rows.sumHeight(0, ri);
-    const cell = rows.getCell(ri, ci);
-    let width = cols.getWidth(ci);
-    let height = rows.getHeight(ri);
+    const left = cols.sumWidth(0, colIndex);
+    const top = rows.sumHeight(0, rowIndex);
+    const cell = rows.getCell(rowIndex, colIndex);
+    let width = cols.getWidth(colIndex);
+    let height = rows.getHeight(rowIndex);
+
     if (cell !== null) {
       if (cell.merge) {
         const [rn, cn] = cell.merge;
-        // console.log('cell.merge:', cell.merge);
+
         if (rn > 0) {
           for (let i = 1; i <= rn; i += 1) {
-            height += rows.getHeight(ri + i);
+            height += rows.getHeight(rowIndex + i);
           }
         }
         if (cn > 0) {
           for (let i = 1; i <= cn; i += 1) {
-            width += cols.getWidth(ci + i);
+            width += cols.getWidth(colIndex + i);
           }
         }
       }
     }
-    // console.log('data:', this.d);
+
     return {
       left,
       top,
@@ -260,8 +320,8 @@ export default class DataProxy {
     };
   }
 
-  getCell(ri, ci) {
-    return this.rows.getCell(ri, ci);
+  getCell(rowIndex, colIndex) {
+    return this.rows.getCell(rowIndex, colIndex);
   }
 
   // 获取默认样式
@@ -269,9 +329,9 @@ export default class DataProxy {
     return this.settings.style;
   }
 
-  getCellStyleOrDefault(ri, ci) {
+  getCellStyleOrDefault(rowIndex, colIndex) {
     const { styles, rows } = this;
-    const cell = rows.getCell(ri, ci);
+    const cell = rows.getCell(rowIndex, colIndex);
     const cellStyle =
       cell && cell.style !== undefined ? styles[cell.style] : {};
     return _.merge({}, this.defaultStyle(), cellStyle);
