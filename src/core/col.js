@@ -44,9 +44,13 @@ class Cols {
   }
 
   sumWidth(min, max) {
-    return _.reduce(_.range(min, max + 1), (sum, value) => {
-      return sum + this.getWidth(value - 1);
-    });
+    return _.reduce(
+      _.range(min + 1, max + 1),
+      (sum, value) => {
+        return sum + this.getWidth(value - 1);
+      },
+      0,
+    );
   }
 
   totalWidth() {

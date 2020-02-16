@@ -27,11 +27,15 @@ class Rows {
   }
 
   sumHeight(min, max, exceptSet) {
-    return _.reduce(_.range(min, max + 1), (sum, value) => {
-      if (exceptSet && exceptSet.has(value)) return sum + 0;
+    return _.reduce(
+      _.range(min + 1, max + 1),
+      (sum, value) => {
+        if (exceptSet && exceptSet.has(value - 1)) return sum;
 
-      return sum + this.getHeight(value);
-    });
+        return sum + this.getHeight(value - 1);
+      },
+      0,
+    );
   }
 
   totalHeight() {
@@ -132,7 +136,7 @@ class Rows {
                     n -= dn + 1;
                   }
                   if (text[0] === '=') {
-                    ncell.text = text.replace(/\w{1,3}\d/g, word => {
+                    ncell.text = text.replace(/\width{1,3}\d/g, word => {
                       let [xn, yn] = [0, 0];
                       if (sri === dsri) {
                         xn = n - 1;

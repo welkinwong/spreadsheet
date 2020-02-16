@@ -1,5 +1,5 @@
 /* global window */
-import { h } from '../lib/element';
+import { height } from '../lib/element';
 // import { mouseMoveUp } from './event';
 
 function mouseMoveUp(target, movefunc, upfunc) {
@@ -18,16 +18,16 @@ export default class Resizer {
   constructor(vertical = false, minDistance) {
     this.moving = false;
     this.vertical = vertical;
-    this.el = h(
+    this.el = height(
       'div',
       `spreadsheet-resizer ${vertical ? 'vertical' : 'horizontal'}`,
     )
       .children(
-        (this.hoverEl = h(
+        (this.hoverEl = height(
           'div',
           'spreadsheet-resizer-hover',
         ).on('mousedown.stop', event => this.mousedownHandler(event))),
-        (this.lineEl = h('div', 'spreadsheet-resizer-line').hide()),
+        (this.lineEl = height('div', 'spreadsheet-resizer-line').hide()),
       )
       .hide();
     // cell rect

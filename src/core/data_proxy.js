@@ -142,9 +142,9 @@ export default class DataProxy {
    */
   scrollx(x, callback) {
     const { scroll, freeze, cols } = this;
-    const [, fci] = freeze;
+    const [, freezeColIndex] = freeze;
 
-    const [colIndex] = rangeReduceIf(fci, cols.len, 0, 0, x, index =>
+    const [colIndex] = rangeReduceIf(freezeColIndex, cols.len, 0, 0, x, index =>
       cols.getWidth(index),
     );
 
@@ -161,8 +161,8 @@ export default class DataProxy {
    */
   scrolly(y, callback) {
     const { scroll, freeze, rows } = this;
-    const [fri] = freeze;
-    const [rowIndex] = rangeReduceIf(fri, rows.len, 0, 0, y, index =>
+    const [freezeRowIndex] = freeze;
+    const [rowIndex] = rangeReduceIf(freezeRowIndex, rows.len, 0, 0, y, index =>
       rows.getHeight(index),
     );
 
@@ -186,6 +186,18 @@ export default class DataProxy {
    */
   viewWidth() {
     return this.settings.view.width();
+  }
+
+  freezeViewRange() {
+    const [rowIndex, colIndex] = this.freeze;
+    return new CellRange(
+      0,
+      0,
+      rowIndex - 1,
+      colIndex - 1,
+      this.freezeTotalWidth(),
+      this.freezeTotalHeight(),
+    );
   }
 
   /**

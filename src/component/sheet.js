@@ -1,4 +1,4 @@
-import { h } from '../lib/element';
+import { height } from '../lib/element';
 import Table from './table';
 import Resizer from './resizer';
 import Scrollbar from './scrollbar';
@@ -102,6 +102,18 @@ function horizontalScrollbarSet() {
   }
 }
 
+function sheetFreeze() {
+  const { data } = this;
+  // const { selector, data, editor } = this;
+  const [ri, ci] = data.freeze;
+  if (ri > 0 || ci > 0) {
+    const fwidth = data.freezeTotalWidth();
+    const fheight = data.freezeTotalHeight();
+    // editor.setFreezeLengths(fwidth, fheight);
+  }
+  // selector.resetAreaOffset();
+}
+
 /**
  * 重置 Sheet
  */
@@ -115,6 +127,7 @@ function sheetReset() {
   el.css('width', `${vRect.width}px`);
   verticalScrollbarSet.call(this); // 设置纵向滚动条
   horizontalScrollbarSet.call(this); // 设置横向滚动条
+  // sheetFreeze.call(this); //
   table.render(); // 渲染表格
 }
 
@@ -147,7 +160,6 @@ function horizontalScrollbarMove(distance) {
 // 初始化事件
 function sheetInitEvents() {
   const {
-    tableEl,
     overlayerEl,
     rowResizer,
     colResizer,
@@ -157,11 +169,6 @@ function sheetInitEvents() {
 
   window.addEventListener('resize', () => {
     this.reload();
-  });
-
-  tableEl.on('mousewheel', event => {
-    const { deltaX, deltaY } = event;
-    console.log(deltaX, deltaY);
   });
 
   // overlayer
@@ -210,10 +217,10 @@ function sheetInitEvents() {
 // Sheet 主体
 export default class Sheet {
   constructor(targetEl, data) {
-    this.el = h('div', 'spreadsheet-sheet');
+    this.el = height('div', 'spreadsheet-sheet');
     targetEl.children(this.el);
     this.data = data;
-    this.tableEl = h('canvas', 'spreadsheet-table');
+    this.tableEl = height('canvas', 'spreadsheet-table');
 
     // resizer
     this.rowResizer = new Resizer(false, data.rows.height);
@@ -224,8 +231,8 @@ export default class Sheet {
     this.horizontalScrollbar = new Scrollbar(false);
 
     // this.selector = new Selector(data);
-    this.overlayerCEl = h('div', 'spreadsheet-overlayer-content');
-    this.overlayerEl = h('div', 'spreadsheet-overlayer').child(
+    this.overlayerCEl = height('div', 'spreadsheet-overlayer-content');
+    this.overlayerEl = height('div', 'spreadsheet-overlayer').child(
       this.overlayerCEl,
     );
 

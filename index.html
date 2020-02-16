@@ -11,9 +11,8 @@
       function load() {
         spreadsheet('#spreadsheet-wrap', {
           showToolbar: true,
-          showGrid: true,
         }).loadData({
-          // freeze: 'B3',
+          freeze: 'C4',
           styles: [
             {
               bgcolor: '#f4f5f8',
@@ -28,12 +27,12 @@
             },
           ],
           cols: {
-            0: { width: 130 },
+            // 0: { width: 130 },
             // 1: { width: 228 },
             // 2: { width: 167 },
             // len: 12,
           },
-          merges: ['C3:G4'],
+          // merges: ['C3:G4'],
           rows: {
             0: {
               cells: {
@@ -53,14 +52,27 @@
                 2: {
                   text:
                     'hahahahahahahahahahahahahahahahahahahahahahahahahahahaha',
-                  merge: [1, 4],
+                  // merge: [1, 4],
                 },
                 25: { text: 'hi jude' },
               },
             },
+            3: {
+              cells: {
+                3: { text: 'ths abc keka' },
+              },
+            },
+            6: {
+              cells: {
+                2: { text: 'alalace' },
+                6: { text: 'border test22' },
+              },
+            },
             8: {
               cells: {
-                8: { text: 'border test', style: 0 },
+                6: { text: 'border test22', style: 0 },
+                7: { text: 'border test22' },
+                8: { text: 'border test22', style: 0 },
               },
             },
           },

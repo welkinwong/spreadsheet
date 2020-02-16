@@ -195,25 +195,25 @@ function renderSelectedHeaderCell(x, y, width, height) {
  * 渲染行列标签栏
  * @param {String} type all | left | top
  * @param {Object} viewRange
- * @param {Number} w 标签栏宽度
- * @param {Number} h 标签栏高度
+ * @param {Number} width 标签栏宽度
+ * @param {Number} height 标签栏高度
  * @param {Number} tx moving distance on x-axis
  * @param {Number} ty moving distance on y-axis
  */
-function renderFixedHeaders(type, viewRange, w, h, tx, ty) {
-  // console.log(type, viewRange, w, h, tx, ty);
+function renderFixedHeaders(type, viewRange, width, height, tx, ty, isFreeze) {
   const { draw, data } = this;
   const { scroll, cols, rows } = data;
-  const sumHeight = viewRange.h; // rows.sumHeight(viewRange.sri, viewRange.eri + 1);
-  const sumWidth = viewRange.w; // cols.sumWidth(viewRange.sci, viewRange.eci + 1);
-  const nty = ty + h;
-  const ntx = tx + w;
+  const sumHeight = viewRange.height; // rows.sumHeight(viewRange.sri, viewRange.eri + 1);
+  const sumWidth = viewRange.width; // cols.sumWidth(viewRange.sci, viewRange.eci + 1);
+  const nty = ty + height;
+  const ntx = tx + width;
 
   draw.save();
   // draw rect background
   draw.attr(tableFixedHeaderCleanStyle);
-  if (type === 'all' || type === 'left') draw.fillRect(0, nty, w, sumHeight);
-  if (type === 'all' || type === 'top') draw.fillRect(ntx, 0, sumWidth, h);
+  if (type === 'all' || type === 'left')
+    draw.fillRect(0, nty, width, sumHeight);
+  if (type === 'all' || type === 'top') draw.fillRect(ntx, 0, sumWidth, height);
 
   const { sri, sci, eri, eci } = data.selector.range;
   // console.log(data.selectIndexes);
@@ -223,44 +223,74 @@ function renderFixedHeaders(type, viewRange, w, h, tx, ty) {
   // 渲染左侧标签列
   if (type === 'all' || type === 'left') {
     data.rowEach(viewRange.sri, viewRange.eri, (i, y1, rowHeight) => {
-      const y = nty + y1 - (scroll.y - rows.sumHeight(0, scroll.rowIndex));
+      const [freezeRowIndex] = data.freeze;
+      let y = nty + y1;
+
+      // 判断是否有设置固定行
+      if (freezeRowIndex === 0) {
+        // 如果没有固定行则按第 0 行开始计算偏移值
+        y = y - (scroll.y - rows.sumHeight(0, scroll.rowIndex));
+      } else if (
+        i + 1 > freezeRowIndex &&
+        freezeRowIndex > 0 &&
+        scroll.rowIndex > 0
+      ) {
+        // 如果有固定列则按固定行开始计算偏移值
+        y = y - (scroll.y - rows.sumHeight(freezeRowIndex, scroll.rowIndex));
+      }
+
       const ii = i;
 
       // 绘制分割线
-      draw.line([0, y], [w, y]);
+      draw.line([0, y], [width, y]);
 
       // 绘制选中单元格对应的列背景
       if (sri <= ii && ii < eri + 1) {
-        renderSelectedHeaderCell.call(this, 0, y, w, rowHeight);
+        renderSelectedHeaderCell.call(this, 0, y, width, rowHeight);
       }
 
       // 绘制标签文字
-      draw.fillText(ii + 1, w / 2, y + rowHeight / 2);
+      draw.fillText(ii + 1, width / 2, y + rowHeight / 2);
     });
     // 绘制标签单元格边框
-    draw.line([0, sumHeight + nty], [w, sumHeight + nty]);
-    draw.line([w, nty], [w, sumHeight + nty]);
+    draw.line([0, sumHeight + nty], [width, sumHeight + nty]);
+    draw.line([width, nty], [width, sumHeight + nty]);
   }
   // 渲染头部标签栏
   if (type === 'all' || type === 'top') {
     data.colEach(viewRange.sci, viewRange.eci, (i, x1, colWidth) => {
-      const x = ntx + x1 - (scroll.x - cols.sumWidth(0, scroll.colIndex));
+      const [, freezeColIndex] = data.freeze;
+      let x = ntx + x1;
+
+      // 判断是否有设置固定列
+      if (freezeColIndex === 0) {
+        // 如果没有固定列则按第 0 列开始计算偏移值
+        x = x - (scroll.x - cols.sumWidth(0, scroll.colIndex));
+      } else if (
+        i + 1 > freezeColIndex &&
+        freezeColIndex > 0 &&
+        scroll.colIndex > 0
+      ) {
+        // 如果有固定列则按固定列开始计算偏移值
+        x = x - (scroll.x - cols.sumWidth(freezeColIndex, scroll.colIndex));
+      }
+
       const ii = i;
 
       // 绘制分割线
-      draw.line([x, 0], [x, h]);
+      draw.line([x, 0], [x, height]);
 
       // 绘制选中单元格对应的行背景
       if (sci <= ii && ii < eci + 1) {
-        renderSelectedHeaderCell.call(this, x, 0, colWidth, h);
+        renderSelectedHeaderCell.call(this, x, 0, colWidth, height);
       }
 
       // 绘制标签文字
-      draw.fillText(stringAt(ii), x + colWidth / 2, h / 2);
+      draw.fillText(stringAt(ii), x + colWidth / 2, height / 2);
     });
     // 绘制标签单元格边框
-    draw.line([sumWidth + ntx, 0], [sumWidth + ntx, h]);
-    draw.line([0, h], [sumWidth + ntx, h]);
+    draw.line([sumWidth + ntx, 0], [sumWidth + ntx, height]);
+    draw.line([0, height], [sumWidth + ntx, height]);
   }
   draw.restore();
 }
@@ -289,45 +319,98 @@ function renderFixedLeftTopCell(fixedHeaderWidth, fixedHeaderHeight) {
  * @param {Number} ty
  */
 function renderContentGrid(
-  { sri, sci, eri, eci, w, h },
+  { sri, sci, eri, eci, width, height },
   fixedHeaderWidth,
   fixedHeaderHeight,
   tx,
   ty,
 ) {
   const { draw, data } = this;
-  const { settings, scroll, cols, rows } = data;
+  const { scroll, cols, rows, freeze } = data;
+  const [freezeRowIndex, freezeColIndex] = freeze;
 
   draw.save();
   draw
     .attr(tableGridStyle)
     .translate(fixedHeaderWidth + tx, fixedHeaderHeight + ty);
 
-  draw.clearRect(0, 0, w, h);
-  if (!settings.showGrid) {
-    draw.restore();
-    return;
-  }
+  draw.clearRect(0, 0, width, height);
 
   // 绘制行
   data.rowEach(sri, eri, (i, rowY, colHeight) => {
-    const offsetY = scroll.y - rows.sumHeight(0, scroll.rowIndex); // 行偏移值
-    if (i !== sri) draw.line([0, rowY - offsetY], [w, rowY - offsetY]);
+    let offsetY = 0;
+
+    // 判断是否有设置固定行
+    if (freezeRowIndex === 0) {
+      // 如果没有固定行则按第 0 行开始计算偏移值
+      offsetY = scroll.y - rows.sumHeight(0, scroll.rowIndex);
+    } else if (
+      i + 1 > freezeRowIndex &&
+      freezeRowIndex > 0 &&
+      scroll.rowIndex > 0
+    ) {
+      // 如果有固定行则按固定行开始计算偏移值
+      offsetY = scroll.y - rows.sumHeight(freezeRowIndex, scroll.rowIndex);
+    }
+
+    if (i !== sri) draw.line([0, rowY - offsetY], [width, rowY - offsetY]);
     if (i === eri)
       draw.line(
         [0, rowY - offsetY + colHeight],
-        [w, rowY - offsetY + colHeight],
+        [width, rowY - offsetY + colHeight],
       );
   });
 
   // 绘制列
   data.colEach(sci, eci, (i, colX, colWidth) => {
-    const offsetX = scroll.x - cols.sumWidth(0, scroll.colIndex); // 列偏移值
-    if (i !== sci) draw.line([colX - offsetX, 0], [colX - offsetX, h]);
+    let offsetX = 0;
+
+    // 判断是否有设置固定列
+    if (freezeColIndex === 0) {
+      // 如果没有固定列则按第 0 列开始计算偏移值
+      offsetX = scroll.x - cols.sumWidth(0, scroll.colIndex); // 列偏移值
+    } else if (
+      i + 1 > freezeColIndex &&
+      freezeColIndex > 0 &&
+      scroll.colIndex > 0
+    ) {
+      // 如果有固定列则按固定列开始计算偏移值
+      offsetX = scroll.x - cols.sumWidth(freezeColIndex, scroll.colIndex); // 列偏移值
+    }
+
+    if (i !== sci) draw.line([colX - offsetX, 0], [colX - offsetX, height]);
     if (i === eci)
-      draw.line([colX - offsetX + colWidth, 0], [colX - offsetX + colWidth, h]);
+      draw.line(
+        [colX - offsetX + colWidth, 0],
+        [colX - offsetX + colWidth, height],
+      );
   });
 
+  draw.restore();
+}
+
+/**
+ * 渲染固定标签高亮线
+ * @param {Number} fixedHeaderWidth 固定标签宽度
+ * @param {Number} fixedHeaderHeight 固定标签高度
+ * @param {Number} ftw
+ * @param {Number} fth
+ */
+function renderFreezeHighlightLine(
+  fixedHeaderWidth,
+  fixedHeaderHeight,
+  ftw,
+  fth,
+) {
+  const { draw, data } = this;
+  const twidth = data.viewWidth() - fixedHeaderWidth;
+  const theight = data.viewHeight() - fixedHeaderHeight;
+  draw
+    .save()
+    .translate(fixedHeaderWidth, fixedHeaderHeight)
+    .attr({ strokeStyle: 'rgba(75, 137, 255, .6)' });
+  draw.line([0, fth], [twidth, fth]);
+  draw.line([ftw, 0], [ftw, theight]);
   draw.restore();
 }
 
@@ -346,6 +429,8 @@ class Table {
    */
   render() {
     const { data } = this;
+    const { cols, rows } = data;
+
     // 顶部和左边标签栏宽高，修改时需同步修改 sheet.js 里的 getTableOffset
     const fixedHeaderWidth = 30;
     const fixedHeaderHeight = 20;
@@ -358,6 +443,7 @@ class Table {
     const tx = data.freezeTotalWidth();
     const ty = data.freezeTotalHeight();
     const { x, y } = data.scroll;
+    // 1
     renderContentGrid.call(
       this,
       viewRange,
@@ -374,7 +460,6 @@ class Table {
       -x,
       -y,
     );
-    // console.log(viewRange);
     renderFixedHeaders.call(
       this,
       'all',
@@ -385,6 +470,126 @@ class Table {
       ty,
     );
     renderFixedLeftTopCell.call(this, fixedHeaderWidth, fixedHeaderHeight);
+
+    const [freezeRowIndex, freezeColIndex] = data.freeze;
+    if (freezeRowIndex > 0 || freezeColIndex > 0) {
+      // 2
+      if (freezeRowIndex > 0) {
+        // 清除区域 2 底部内容，形成一个遮罩层
+        this.draw.clearRect(
+          0,
+          (rows.sumHeight(0, freezeRowIndex - 1) + fixedHeaderHeight) * 2,
+          viewRange.width * 2,
+          rows.sumHeight(freezeRowIndex - 1, freezeRowIndex) * 2,
+        );
+
+        const vr = viewRange.clone();
+        vr.sri = 0;
+        vr.eri = freezeRowIndex - 1;
+        vr.height = ty;
+        renderContentGrid.call(
+          this,
+          vr,
+          fixedHeaderWidth,
+          fixedHeaderHeight,
+          tx,
+          0,
+        );
+        renderContent.call(
+          this,
+          vr,
+          fixedHeaderWidth,
+          fixedHeaderHeight,
+          -x,
+          0,
+        );
+        renderFixedHeaders.call(
+          this,
+          'top',
+          vr,
+          fixedHeaderWidth,
+          fixedHeaderHeight,
+          tx,
+          0,
+        );
+      }
+
+      // 3
+      if (freezeColIndex > 0) {
+        // 清除区域 3 底部内容，形成一个遮罩层
+        this.draw.clearRect(
+          (cols.sumWidth(0, freezeColIndex - 1) + fixedHeaderWidth) * 2,
+          0,
+          cols.sumWidth(freezeColIndex - 1, freezeColIndex) * 2,
+          viewRange.height * 2,
+        );
+
+        const vr = viewRange.clone();
+        vr.sci = 0;
+        vr.eci = freezeColIndex - 1;
+        vr.width = tx;
+        renderContentGrid.call(
+          this,
+          vr,
+          fixedHeaderWidth,
+          fixedHeaderHeight,
+          0,
+          ty,
+        );
+        renderFixedHeaders.call(
+          this,
+          'left',
+          vr,
+          fixedHeaderWidth,
+          fixedHeaderHeight,
+          0,
+          ty,
+        );
+        renderContent.call(
+          this,
+          vr,
+          fixedHeaderWidth,
+          fixedHeaderHeight,
+          0,
+          -y,
+        );
+      }
+      // 4
+      const freezeViewRange = data.freezeViewRange();
+      renderContentGrid.call(
+        this,
+        freezeViewRange,
+        fixedHeaderWidth,
+        fixedHeaderHeight,
+        0,
+        0,
+      );
+      renderFixedHeaders.call(
+        this,
+        'all',
+        freezeViewRange,
+        fixedHeaderWidth,
+        fixedHeaderHeight,
+        0,
+        0,
+      );
+      renderContent.call(
+        this,
+        freezeViewRange,
+        fixedHeaderWidth,
+        fixedHeaderHeight,
+        0,
+        0,
+      );
+      // 5
+      renderFreezeHighlightLine.call(
+        this,
+        fixedHeaderWidth,
+        fixedHeaderHeight,
+        tx,
+        ty,
+      );
+    }
   }
 
   clear() {

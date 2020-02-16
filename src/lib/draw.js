@@ -17,11 +17,11 @@ function npxLine(px) {
 }
 
 class DrawBox {
-  constructor(x, y, w, h, padding = 0) {
+  constructor(x, y, width, height, padding = 0) {
     this.x = x;
     this.y = y;
-    this.width = w;
-    this.height = h;
+    this.width = width;
+    this.height = height;
     this.padding = padding;
     this.bgcolor = '#ffffff';
     // border: [width, style, color]
@@ -59,15 +59,15 @@ class DrawBox {
     return x;
   }
 
-  texty(align, h) {
+  texty(align, txtHeight) {
     const { height, padding } = this;
     let { y } = this;
     if (align === 'top') {
       y += padding;
     } else if (align === 'middle') {
-      y += height / 2 - h / 2;
+      y += height / 2 - txtHeight / 2;
     } else if (align === 'bottom') {
-      y += height - padding - h;
+      y += height - padding - txtHeight;
     }
     return y;
   }
@@ -182,13 +182,13 @@ class Draw {
     return this;
   }
 
-  clearRect(x, y, w, h) {
-    this.ctx.clearRect(x, y, w, h);
+  clearRect(x, y, width, height) {
+    this.ctx.clearRect(x, y, width, height);
     return this;
   }
 
-  fillRect(x, y, w, h) {
-    this.ctx.fillRect(npx(x) - 0.5, npx(y) - 0.5, npx(w), npx(h));
+  fillRect(x, y, width, height) {
+    this.ctx.fillRect(npx(x) - 0.5, npx(y) - 0.5, npx(width), npx(height));
     return this;
   }
 
@@ -235,14 +235,14 @@ class Draw {
     txts.forEach(it => {
       const txtWidth = ctx.measureText(it).width;
       if (textWrap && txtWidth > biw) {
-        let textLine = { w: 0, len: 0, start: 0 };
+        let textLine = { width: 0, len: 0, start: 0 };
         for (let i = 0; i < it.length; i += 1) {
-          if (textLine.w >= biw) {
+          if (textLine.width >= biw) {
             ntxts.push(it.substr(textLine.start, textLine.len));
-            textLine = { w: 0, len: 0, start: i };
+            textLine = { width: 0, len: 0, start: i };
           }
           textLine.len += 1;
-          textLine.w += ctx.measureText(it[i]).width + 1;
+          textLine.width += ctx.measureText(it[i]).width + 1;
         }
         if (textLine.len > 0) {
           ntxts.push(it.substr(textLine.start, textLine.len));
