@@ -1,9 +1,29 @@
 @import './component/scrollbar.less';
 @import './component/overlayer.less';
+@import './component/selector.less';
+@import './component/resizer.less';
+@import './component/editor.less';
 
 body {
   margin: 0;
   overflow: hidden;
+}
+
+.spreadsheet {
+  font-size: 13px;
+  line-height: normal;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  font-family: 'Lato', 'Source Sans Pro', Roboto, Helvetica, Arial, sans-serif;
+  box-sizing: content-box;
+  background: #fff;
+  -webkit-font-smoothing: antialiased;
+
+  textarea {
+    font: 400 13px Arial, 'Lato', 'Source Sans Pro', Roboto, Helvetica,
+      sans-serif;
+  }
 }
 
 .spreadsheet-sheet {
@@ -14,4 +34,20 @@ body {
 .spreadsheet-table {
   // html5 bottom margin bug
   vertical-align: bottom;
+}
+
+.spreadsheet-suggest,
+.spreadsheet-contextmenu,
+.spreadsheet-sort-filter {
+  position: absolute;
+  box-shadow: 1px 2px 5px 2px rgba(51, 51, 51, 0.15);
+  background: #fff;
+  z-index: 100;
+  width: 260px;
+  pointer-events: auto;
+  overflow: auto;
+}
+
+.spreadsheet-suggest {
+  width: 200px;
 }

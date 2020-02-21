@@ -200,7 +200,7 @@ function renderSelectedHeaderCell(x, y, width, height) {
  * @param {Number} tx moving distance on x-axis
  * @param {Number} ty moving distance on y-axis
  */
-function renderFixedHeaders(type, viewRange, width, height, tx, ty, isFreeze) {
+function renderFixedHeaders(type, viewRange, width, height, tx, ty) {
   const { draw, data } = this;
   const { scroll, cols, rows } = data;
   const sumHeight = viewRange.height; // rows.sumHeight(viewRange.sri, viewRange.eri + 1);
@@ -429,11 +429,7 @@ class Table {
    */
   render() {
     const { data } = this;
-    const { cols, rows } = data;
-
-    // 顶部和左边标签栏宽高，修改时需同步修改 sheet.js 里的 getTableOffset
-    const fixedHeaderWidth = 30;
-    const fixedHeaderHeight = 20;
+    const { cols, rows, fixedHeaderWidth, fixedHeaderHeight } = data;
 
     this.draw.resize(data.viewWidth(), data.viewHeight());
     this.clear();

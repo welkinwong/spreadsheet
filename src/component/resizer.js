@@ -1,33 +1,20 @@
-/* global window */
-import { height } from '../lib/element';
-// import { mouseMoveUp } from './event';
-
-function mouseMoveUp(target, movefunc, upfunc) {
-  bind(target, 'mousemove', movefunc);
-  const t = target;
-  t.xEvtUp = event => {
-    // console.log('mouseup>>>');
-    unbind(target, 'mousemove', movefunc);
-    unbind(target, 'mouseup', target.xEvtUp);
-    upfunc(event);
-  };
-  bind(target, 'mouseup', target.xEvtUp);
-}
+import { h } from '../lib/element';
+import { mouseMoveUp } from '../lib/event';
 
 export default class Resizer {
   constructor(vertical = false, minDistance) {
     this.moving = false;
     this.vertical = vertical;
-    this.el = height(
+    this.el = h(
       'div',
       `spreadsheet-resizer ${vertical ? 'vertical' : 'horizontal'}`,
     )
       .children(
-        (this.hoverEl = height(
+        (this.hoverEl = h(
           'div',
           'spreadsheet-resizer-hover',
         ).on('mousedown.stop', event => this.mousedownHandler(event))),
-        (this.lineEl = height('div', 'spreadsheet-resizer-line').hide()),
+        (this.lineEl = h('div', 'spreadsheet-resizer-line').hide()),
       )
       .hide();
     // cell rect

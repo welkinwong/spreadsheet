@@ -260,6 +260,6 @@ class Element {
   }
 }
 
-const height = (tag, className = '') => new Element(tag, className);
+const h = (tag, className = '') => new Element(tag, className);
 
-export { Element, height };
+export { Element, h };

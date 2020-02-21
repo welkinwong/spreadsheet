@@ -1,14 +1,14 @@
-import { height } from '../lib/element';
+import { h } from '../lib/element';
 
 export default class Scrollbar {
   constructor(vertical) {
     this.vertical = vertical;
     this.moveFn = null;
-    this.el = height(
+    this.el = h(
       'div',
       `spreadsheet-scrollbar ${vertical ? 'vertical' : 'horizontal'}`,
     )
-      .child((this.contentEl = height('div', '')))
+      .child((this.contentEl = h('div', '')))
       .on('mousemove.stop', () => {})
       .on('scroll.stop', event => {
         const { scrollTop, scrollLeft } = event.target;

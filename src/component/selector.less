@@ -1,0 +1,31 @@
+.spreadsheet-selector {
+  .spreadsheet-selector-area {
+    position: absolute;
+    border: 2px solid rgb(75, 137, 255);
+    background: rgba(75, 137, 255, 0.1);
+  }
+  .spreadsheet-selector-clipboard,
+  .spreadsheet-selector-autofill {
+    position: absolute;
+    background: transparent;
+    z-index: 100;
+  }
+  .spreadsheet-selector-clipboard {
+    border: 2px dashed rgb(75, 137, 255);
+  }
+  .spreadsheet-selector-autofill {
+    border: 1px dashed rgba(0, 0, 0, 0.45); // #606060; // rgba(0, 0, 0, .2);
+  }
+  .spreadsheet-selector-corner {
+    pointer-events: auto;
+    position: absolute;
+    cursor: crosshair;
+    font-size: 0;
+    height: 5px;
+    width: 5px;
+    right: -5px;
+    bottom: -5px;
+    border: 2px solid rgb(255, 255, 255);
+    background: rgb(75, 137, 255);
+  }
+}

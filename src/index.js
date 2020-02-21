@@ -1,4 +1,4 @@
-import { height } from './lib/element';
+import { h } from './lib/element';
 import DataProxy from './core/data_proxy';
 import Sheet from './component/sheet';
 import './index.less';
@@ -10,7 +10,7 @@ class Spreadsheet {
       targetEl = document.querySelector(selectors);
     }
     this.data = new DataProxy('sheet1', options);
-    const rootEl = height('div', 'spreadsheet').on('contextmenu', event =>
+    const rootEl = h('div', 'spreadsheet').on('contextmenu', event =>
       event.preventDefault(),
     );
     // create canvas element
@@ -34,6 +34,12 @@ class Spreadsheet {
 
   change(callback) {
     this.data.change = callback;
+    return this;
+  }
+
+  update(ops) {
+    this.data.update(ops);
+    this.sheet.reload();
     return this;
   }
 

@@ -9,10 +9,12 @@
     <div id="spreadsheet-wrap"></div>
     <script>
       function load() {
-        spreadsheet('#spreadsheet-wrap', {
+        const Spreadsheet = spreadsheet('#spreadsheet-wrap', {
           showToolbar: true,
-        }).loadData({
-          freeze: 'C4',
+        });
+
+        Spreadsheet.loadData({
+          // freeze: 'C4',
           styles: [
             {
               bgcolor: '#f4f5f8',
@@ -27,7 +29,7 @@
             },
           ],
           cols: {
-            // 0: { width: 130 },
+            0: { width: 130 },
             // 1: { width: 228 },
             // 2: { width: 167 },
             // len: 12,
@@ -77,10 +79,15 @@
             },
           },
         });
-        // .change(delta => {
-        //   console.log(delta);
-        //   // console.log(xs.validate());
-        // });
+
+        Spreadsheet.change((delta, srouce) => {
+          console.log(delta, srouce);
+          // console.log(xs.validate());
+        });
+
+        window.abc = ops => {
+          Spreadsheet.update(ops);
+        };
       }
     </script>
   </body>
